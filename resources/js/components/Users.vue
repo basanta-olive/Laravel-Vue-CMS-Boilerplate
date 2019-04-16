@@ -109,6 +109,7 @@
               editMode: false,
               users: {},  
               form: new Form({
+              id: '',  
               name: '',
               email: '',
               password: ''
@@ -119,7 +120,27 @@
         methods : {
 
            updateUser(){
+             this.$Progress.start();
+             this.form.put('api/user/'+this.form.id)
+             .then((response) => {
 
+                 console.log(response);
+
+                 this.$emit('afterCreate'); //fire event
+
+                  Toast.fire({
+                    type: 'success',
+                    title: response.data.message
+                  })
+
+                  $('#addNewModal').modal('hide');
+
+                  this.$Progress.finish();
+
+             })
+             .catch(() => {
+               this.$Progress.finish();
+             })
            },
            newModal(){
              this.editMode = false;
