@@ -1981,9 +1981,12 @@ __webpack_require__.r(__webpack_exports__);
 //
 //
 //
+//
+//
 /* harmony default export */ __webpack_exports__["default"] = ({
   data: function data() {
     return {
+      editMode: false,
       users: {},
       form: new Form({
         name: '',
@@ -1993,6 +1996,18 @@ __webpack_require__.r(__webpack_exports__);
     };
   },
   methods: {
+    updateUser: function updateUser() {},
+    newModal: function newModal() {
+      this.editMode = false;
+      this.form.reset();
+      $('#addNewModal').modal('show');
+    },
+    editModal: function editModal(user) {
+      this.editMode = true;
+      this.form.reset();
+      $('#addNewModal').modal('show');
+      this.form.fill(user);
+    },
     loadUsers: function loadUsers() {
       var _this = this;
 
@@ -2007,24 +2022,50 @@ __webpack_require__.r(__webpack_exports__);
       this.$Progress.start();
       this.form.post('api/user').then(function () {
         _this2.$emit('afterCreate'); //fire event
+        //this.createUser = true;
 
 
-        $('#addNewModal').modal('hide');
         Toast.fire({
           type: 'success',
           title: 'User created successfully'
         });
+        $('#addNewModal').modal('hide');
 
         _this2.$Progress.finish();
       })["catch"](function () {});
+    },
+    deleteUser: function deleteUser(id) {
+      var _this3 = this;
+
+      Swal.fire({
+        title: 'Are you sure?',
+        text: "You won't be able to revert this!",
+        type: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#3085d6',
+        cancelButtonColor: '#d33',
+        confirmButtonText: 'Yes, delete it!'
+      }).then(function (result) {
+        if (result.value) {
+          //send request to the server
+          _this3.form["delete"]('api/user/' + id).then(function (response) {
+            Swal.fire('Deleted!', response.message, 'success');
+
+            _this3.$emit('afterCreate');
+          })["catch"](function () {
+            Swal.fire('Failed!', 'There was something wrong', 'warning');
+          });
+        } //result.value
+
+      });
     }
   },
   created: function created() {
-    var _this3 = this;
+    var _this4 = this;
 
     this.loadUsers();
     this.$on('afterCreate', function () {
-      _this3.loadUsers();
+      _this4.loadUsers();
     }); //listen to the event
   }
 });
@@ -58573,14 +58614,27 @@ var render = function() {
     _c("div", { staticClass: "row mt-5" }, [
       _c("div", { staticClass: "col-md-12" }, [
         _c("div", { staticClass: "card" }, [
-          _vm._m(0),
+          _c("div", { staticClass: "card-header" }, [
+            _c("h3", { staticClass: "card-title" }, [_vm._v("List of Users ")]),
+            _vm._v(" "),
+            _c("div", { staticClass: "card-tools" }, [
+              _c(
+                "button",
+                { staticClass: "btn btn-success", on: { click: _vm.newModal } },
+                [
+                  _vm._v("Add New "),
+                  _c("i", { staticClass: "fa fa-user-plus fa-fw" })
+                ]
+              )
+            ])
+          ]),
           _vm._v(" "),
           _c("div", { staticClass: "card-body table-responsive p-0" }, [
             _c("table", { staticClass: "table table-hover" }, [
               _c(
                 "tbody",
                 [
-                  _vm._m(1),
+                  _vm._m(0),
                   _vm._v(" "),
                   _vm._l(_vm.users, function(user) {
                     return _c("tr", [
@@ -58594,7 +58648,35 @@ var render = function() {
                         _vm._v(_vm._s(_vm._f("myDate")(user.created_at)))
                       ]),
                       _vm._v(" "),
-                      _vm._m(2, true)
+                      _c("td", [
+                        _c(
+                          "a",
+                          {
+                            attrs: { href: "#" },
+                            on: {
+                              click: function($event) {
+                                return _vm.editModal(user)
+                              }
+                            }
+                          },
+                          [_c("i", { staticClass: "fa fa-edit blue" })]
+                        ),
+                        _vm._v(
+                          "\n                            /\n                            "
+                        ),
+                        _c(
+                          "a",
+                          {
+                            attrs: { href: "#" },
+                            on: {
+                              click: function($event) {
+                                return _vm.deleteUser(user.id)
+                              }
+                            }
+                          },
+                          [_c("i", { staticClass: "fa fa-trash red" })]
+                        )
+                      ])
                     ])
                   })
                 ],
@@ -58627,7 +58709,43 @@ var render = function() {
           },
           [
             _c("div", { staticClass: "modal-content" }, [
-              _vm._m(3),
+              _c("div", { staticClass: "modal-header" }, [
+                _c(
+                  "h5",
+                  {
+                    directives: [
+                      {
+                        name: "show",
+                        rawName: "v-show",
+                        value: !_vm.editMode,
+                        expression: "!editMode"
+                      }
+                    ],
+                    staticClass: "modal-title",
+                    attrs: { id: "addNewModalLabel" }
+                  },
+                  [_vm._v("Add New")]
+                ),
+                _vm._v(" "),
+                _c(
+                  "h5",
+                  {
+                    directives: [
+                      {
+                        name: "show",
+                        rawName: "v-show",
+                        value: _vm.editMode,
+                        expression: "editMode"
+                      }
+                    ],
+                    staticClass: "modal-title",
+                    attrs: { id: "addNewModalLabel" }
+                  },
+                  [_vm._v("Update user")]
+                ),
+                _vm._v(" "),
+                _vm._m(1)
+              ]),
               _vm._v(" "),
               _c(
                 "form",
@@ -58635,7 +58753,7 @@ var render = function() {
                   on: {
                     submit: function($event) {
                       $event.preventDefault()
-                      return _vm.createUser($event)
+                      _vm.editMode ? _vm.updateUser() : _vm.createUser()
                     },
                     keydown: function($event) {
                       return _vm.form.onKeydown($event)
@@ -58767,7 +58885,50 @@ var render = function() {
                     )
                   ]),
                   _vm._v(" "),
-                  _vm._m(4)
+                  _c("div", { staticClass: "modal-footer" }, [
+                    _c(
+                      "button",
+                      {
+                        staticClass: "btn btn-danger",
+                        attrs: { type: "button", "data-dismiss": "modal" }
+                      },
+                      [_vm._v("Close")]
+                    ),
+                    _vm._v(" "),
+                    _c(
+                      "button",
+                      {
+                        directives: [
+                          {
+                            name: "show",
+                            rawName: "v-show",
+                            value: _vm.editMode,
+                            expression: "editMode"
+                          }
+                        ],
+                        staticClass: "btn btn-success",
+                        attrs: { type: "submit" }
+                      },
+                      [_vm._v("Update")]
+                    ),
+                    _vm._v(" "),
+                    _c(
+                      "button",
+                      {
+                        directives: [
+                          {
+                            name: "show",
+                            rawName: "v-show",
+                            value: !_vm.editMode,
+                            expression: "!editMode"
+                          }
+                        ],
+                        staticClass: "btn btn-primary",
+                        attrs: { type: "submit" }
+                      },
+                      [_vm._v("Create")]
+                    )
+                  ])
                 ],
                 1
               )
@@ -58779,28 +58940,6 @@ var render = function() {
   ])
 }
 var staticRenderFns = [
-  function() {
-    var _vm = this
-    var _h = _vm.$createElement
-    var _c = _vm._self._c || _h
-    return _c("div", { staticClass: "card-header" }, [
-      _c("h3", { staticClass: "card-title" }, [_vm._v("List of Users ")]),
-      _vm._v(" "),
-      _c("div", { staticClass: "card-tools" }, [
-        _c(
-          "button",
-          {
-            staticClass: "btn btn-success",
-            attrs: { "data-toggle": "modal", "data-target": "#addNewModal" }
-          },
-          [
-            _vm._v("Add New "),
-            _c("i", { staticClass: "fa fa-user-plus fa-fw" })
-          ]
-        )
-      ])
-    ])
-  },
   function() {
     var _vm = this
     var _h = _vm.$createElement
@@ -58821,61 +58960,18 @@ var staticRenderFns = [
     var _vm = this
     var _h = _vm.$createElement
     var _c = _vm._self._c || _h
-    return _c("td", [
-      _c("a", { attrs: { href: "#" } }, [
-        _c("i", { staticClass: "fa fa-edit blue" })
-      ]),
-      _vm._v("\n                            /\n                            "),
-      _c("a", { attrs: { href: "#" } }, [
-        _c("i", { staticClass: "fa fa-trash red" })
-      ])
-    ])
-  },
-  function() {
-    var _vm = this
-    var _h = _vm.$createElement
-    var _c = _vm._self._c || _h
-    return _c("div", { staticClass: "modal-header" }, [
-      _c(
-        "h5",
-        { staticClass: "modal-title", attrs: { id: "addNewModalLabel" } },
-        [_vm._v("Add New")]
-      ),
-      _vm._v(" "),
-      _c(
-        "button",
-        {
-          staticClass: "close",
-          attrs: {
-            type: "button",
-            "data-dismiss": "modal",
-            "aria-label": "Close"
-          }
-        },
-        [_c("span", { attrs: { "aria-hidden": "true" } }, [_vm._v("×")])]
-      )
-    ])
-  },
-  function() {
-    var _vm = this
-    var _h = _vm.$createElement
-    var _c = _vm._self._c || _h
-    return _c("div", { staticClass: "modal-footer" }, [
-      _c(
-        "button",
-        {
-          staticClass: "btn btn-danger",
-          attrs: { type: "button", "data-dismiss": "modal" }
-        },
-        [_vm._v("Close")]
-      ),
-      _vm._v(" "),
-      _c(
-        "button",
-        { staticClass: "btn btn-primary", attrs: { type: "submit" } },
-        [_vm._v("Create")]
-      )
-    ])
+    return _c(
+      "button",
+      {
+        staticClass: "close",
+        attrs: {
+          type: "button",
+          "data-dismiss": "modal",
+          "aria-label": "Close"
+        }
+      },
+      [_c("span", { attrs: { "aria-hidden": "true" } }, [_vm._v("×")])]
+    )
   }
 ]
 render._withStripped = true
